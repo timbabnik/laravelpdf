@@ -318,6 +318,124 @@
             }
         }
         
+        /* Theme Toggle Styles */
+        .theme-toggle-container {
+            position: relative;
+        }
+        
+        .theme-toggle {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-toggle:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: scale(1.05);
+        }
+        
+        .theme-icon {
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        body.dark-mode .header h1 {
+            color: #f1f5f9;
+        }
+        
+        body.dark-mode .header p {
+            color: #94a3b8;
+        }
+        
+        body.dark-mode .upload-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        body.dark-mode .upload-area {
+            background: #0f172a;
+            border-color: #475569;
+        }
+        
+        body.dark-mode .upload-area:hover {
+            background: #1e293b;
+            border-color: #3b82f6;
+        }
+        
+        body.dark-mode .upload-area.dragover {
+            background: #1e293b;
+            border-color: #3b82f6;
+        }
+        
+        body.dark-mode .upload-icon {
+            background: #334155;
+        }
+        
+        body.dark-mode .upload-area:hover .upload-icon {
+            background: #3b82f6;
+        }
+        
+        body.dark-mode .upload-text h3 {
+            color: #f1f5f9;
+        }
+        
+        body.dark-mode .upload-text p {
+            color: #94a3b8;
+        }
+        
+        body.dark-mode .browse-button {
+            background: #3b82f6;
+        }
+        
+        body.dark-mode .browse-button:hover {
+            background: #2563eb;
+        }
+        
+        body.dark-mode .extract-button {
+            background: #3b82f6;
+        }
+        
+        body.dark-mode .extract-button:hover {
+            background: #2563eb;
+        }
+        
+        body.dark-mode .file-info {
+            background: #1e293b;
+        }
+        
+        body.dark-mode .file-info h4 {
+            color: #f1f5f9;
+        }
+        
+        body.dark-mode .file-info p {
+            color: #94a3b8;
+        }
+        
+        body.dark-mode .theme-toggle {
+            background: #1e293b;
+            border-color: #334155;
+        }
+        
+        body.dark-mode .theme-toggle:hover {
+            background: #334155;
+            border-color: #475569;
+        }
+        
         /* Enhanced Responsive Design */
         @media (max-width: 768px) {
             .modal-content {
@@ -343,14 +461,33 @@
                 flex-direction: column !important;
                 gap: 0.5rem !important;
             }
+            
+            .theme-toggle {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .theme-icon {
+                font-size: 1.25rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>Invoice Extractor</h1>
-            <p>Upload your invoice PDF to extract key data automatically</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div style="flex: 1;">
+                    <h1>Invoice Extractor</h1>
+                    <p>Upload your invoice PDF to extract key data automatically</p>
+                   
+                </div>
+                <div class="theme-toggle-container">
+                    <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()">
+                        <span class="theme-icon" id="themeIcon">🌙</span>
+                    </button>
+                </div>
+            </div>
         </div>
         
         <div class="upload-card">
@@ -922,8 +1059,42 @@
             }
         }
         
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.classList.contains('dark-mode')) {
+                // Switch to light mode
+                body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                // Switch to dark mode
+                body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+            } else {
+                body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+            }
+        }
+        
         // Initialize the app when the page loads
         document.addEventListener('DOMContentLoaded', () => {
+            loadTheme(); // Load saved theme first
             new InvoiceExtractor();
         });
     </script>
