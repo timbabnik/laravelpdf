@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Invoice Extractor - Upload Invoice PDF</title>
+    <title>🎨 Magic Invoice Extractor - Upload Your PDF! 📄</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=comic-neue:400,700|nunito:400,600,700,800" rel="stylesheet" />
     
     <!-- Styles / Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -21,12 +21,27 @@
         }
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8fafc;
-            color: #334155;
+            font-family: 'Comic Neue', 'Nunito', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #2d3748;
             line-height: 1.6;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="90" r="2.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="1.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+        }
+        
         
         .container {
             max-width: 600px;
@@ -36,6 +51,8 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            z-index: 1;
         }
         
         .header {
@@ -57,50 +74,78 @@
         }
         
         .upload-card {
-            background: white;
-            border-radius: 16px;
+            background: linear-gradient(145deg, #ffffff, #f0f8ff);
+            border-radius: 25px;
             padding: 2.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border: 1px solid #e2e8f0;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 0 0 3px #ff6b6b,
+                0 0 0 6px #4ecdc4,
+                0 0 0 9px #45b7d1;
+            border: 4px solid #fff;
+            transform: rotate(1deg);
+            transition: all 0.3s ease;
+        }
+        
+        .upload-card:hover {
+            transform: rotate(0deg) scale(1.02);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 4px #ff6b6b,
+                0 0 0 8px #4ecdc4,
+                0 0 0 12px #45b7d1;
         }
         
         .upload-area {
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
+            border: 4px dashed #ff6b6b;
+            border-radius: 20px;
             padding: 3rem 2rem;
             text-align: center;
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
-            background: #f8fafc;
+            background: linear-gradient(45deg, #fff5f5, #f0f8ff);
+            transform: rotate(-1deg);
         }
         
         .upload-area:hover {
-            border-color: #3b82f6;
-            background: #f1f5f9;
+            border-color: #4ecdc4;
+            background: linear-gradient(45deg, #f0fff4, #f0f8ff);
+            transform: rotate(0deg) scale(1.05);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
         }
         
         .upload-area.dragover {
-            border-color: #3b82f6;
-            background: #eff6ff;
-            transform: scale(1.02);
+            border-color: #45b7d1;
+            background: linear-gradient(45deg, #e6f3ff, #f0f8ff);
+            transform: rotate(0deg) scale(1.08);
+            box-shadow: 0 15px 40px rgba(69, 183, 209, 0.4);
         }
         
         .upload-icon {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             margin: 0 auto 1.5rem;
-            background: #e2e8f0;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            animation: pulse 2s infinite;
         }
         
         .upload-area:hover .upload-icon {
-            background: #3b82f6;
-            color: white;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 12px 30px rgba(78, 205, 196, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
         
         .upload-icon svg {
@@ -130,45 +175,57 @@
         
         .browse-button {
             display: inline-block;
-            background: #3b82f6;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
             color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            padding: 1rem 2rem;
+            border-radius: 25px;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 700;
             transition: all 0.3s ease;
             border: none;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+            transform: rotate(-2deg);
         }
         
         .browse-button:hover {
-            background: #2563eb;
-            transform: translateY(-1px);
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            transform: rotate(0deg) translateY(-3px);
+            box-shadow: 0 12px 30px rgba(78, 205, 196, 0.4);
         }
         
         .extract-button {
             width: 100%;
-            background: #3b82f6;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-size: 200% 200%;
             color: white;
-            padding: 1rem 2rem;
+            padding: 1.2rem 2rem;
             border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: 800;
             cursor: pointer;
             transition: all 0.3s ease;
             margin-top: 2rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+            transform: rotate(-1deg);
+            animation: gradientShift 3s ease infinite;
         }
         
         .extract-button:hover {
-            background: #2563eb;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+            transform: rotate(0deg) translateY(-3px);
+            box-shadow: 0 15px 40px rgba(78, 205, 196, 0.4);
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .extract-button:disabled {
@@ -498,11 +555,11 @@
                     </svg>
                 </div>
                 <div class="upload-text">
-                    <h3>Drop your PDF here</h3>
-                    <p>or click to browse files</p>
+                    <h3>📄 Drop your PDF here! 🎯</h3>
+                    <p>🖱️ or click to browse files! 🗂️</p>
                 </div>
                 <button class="browse-button" onclick="document.getElementById('fileInput').click()">
-                    Browse Files
+                    Browse Files!
                 </button>
                 <input type="file" id="fileInput" class="file-input" accept=".pdf" />
             </div>
@@ -514,10 +571,10 @@
             </div>
             
             <button class="extract-button" id="extractButton" disabled>
-                <span class="button-text">Extract Data</span>
+                <span class="button-text">Extract Data!</span>
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
-                    <span>Processing...</span>
+                    <span>🎭 Working my magic...</span>
                 </div>
             </button>
         </div>
