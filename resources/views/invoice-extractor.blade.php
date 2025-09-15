@@ -455,6 +455,21 @@
             color: #94a3b8;
         }
         
+        body.dark-mode .upload-area {
+            background: #0f172a !important;
+            border-color: #475569 !important;
+        }
+        
+        body.dark-mode .upload-area:hover {
+            background: #1e293b !important;
+            border-color: #3b82f6 !important;
+        }
+        
+        body.dark-mode .upload-area.dragover {
+            background: #1e293b !important;
+            border-color: #3b82f6 !important;
+        }
+        
         body.dark-mode .browse-button {
             background: #3b82f6;
         }
@@ -481,6 +496,10 @@
         
         body.dark-mode .file-info p {
             color: #94a3b8;
+        }
+        
+        body.dark-mode .file-info .file-name {
+            color: #60a5fa;
         }
         
         body.dark-mode .theme-toggle {
@@ -937,7 +956,7 @@
                             <button id="viewRawJson" style="background: #6b7280; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#4b5563'" onmouseout="this.style.background='#6b7280'">
                                 View Raw JSON
                             </button>
-                            <button id="saveToDatabase" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                            <button id="saveToDatabase" style="background: #10b981; color: black; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
                                 Save to Database
                             </button>
                         </div>
