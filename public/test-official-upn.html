@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Official UPN QR Code Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; margin: 10px 0; max-width: 300px; }
+        .test-content { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; white-space: pre-wrap; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #d4edda; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Official UPN QR Code Test</h1>
+    
+    <div class="instructions">
+        <h3>🚀 NEW: Official UPN Format Test</h3>
+        <p>This test uses the <strong>official UPN QR code format</strong> that should work with NLB Klik/Flik.</p>
+        <p><strong>Key improvements:</strong></p>
+        <ul>
+            <li>✅ Proper UPN format with correct field order</li>
+            <li>✅ UTF-8 character encoding</li>
+            <li>✅ Sanitized Slovenian characters</li>
+            <li>✅ Proper amount formatting</li>
+            <li>✅ All required UPN fields included</li>
+        </ul>
+        <p><strong>This should work with both NLB Klik/Flik AND Revolut!</strong></p>
+    </div>
+    
+    <button onclick="generateOfficialUpnQr()">Generate Official UPN QR Code</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function generateOfficialUpnQr() {
+            try {
+                const response = await fetch('/api/test-official-upn-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>✅ Official UPN QR Code Generated</h3>
+                            <div class="test-content">${data.upn_string}</div>
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            <p><strong>🎯 Test this with:</strong></p>
+                            <ul>
+                                <li>📱 NLB Klik - Should work now!</li>
+                                <li>📱 NLB Pay Flik - Should work now!</li>
+                                <li>📱 Revolut - Should still work!</li>
+                            </ul>
+                            <div style="background: #e2e3e5; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                <strong>Data used:</strong><br>
+                                IBAN: ${data.data_used.iban}<br>
+                                Name: ${data.data_used.name}<br>
+                                Amount: ${data.data_used.amount}<br>
+                                Reference: ${data.data_used.reference}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

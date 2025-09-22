@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UPN QR Code Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .qr-container { margin: 20px auto; max-width: 400px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>🏦 UPN QR Code Test</h1>
+    
+    <div class="info">
+        <h3>✅ Corrected UPN Format</h3>
+        <p><strong>IBAN:</strong> SI56 0203 1367 1566 113</p>
+        <p><strong>Amount:</strong> 150.00 EUR</p>
+        <p><strong>Reference:</strong> SI12-2025-0001</p>
+        <p><strong>Format:</strong> CRLF + Windows-1250 + 34 lines</p>
+    </div>
+    
+    <button onclick="generateUPNQR()">Generate UPN QR Code</button>
+    
+    <div id="qr-container" class="qr-container" style="display: none;">
+        <h3>📱 Test this QR code with NLB Klik/Flik</h3>
+        <div id="qr-code" class="qr-code"></div>
+        <p><strong>Instructions:</strong></p>
+        <ul style="text-align: left;">
+            <li><strong>NLB Klik:</strong> Go to "Plačila" → "Slikaj in plačaj"</li>
+            <li><strong>NLB Flik:</strong> Scan the QR code</li>
+            <li><strong>Expected:</strong> Should work now (not "validacija neuspesna")</li>
+        </ul>
+    </div>
+
+    <script>
+        async function generateUPNQR() {
+            try {
+                const response = await fetch('/api/test-valid-slovenian-upn');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('qr-container').style.display = 'block';
+                    document.getElementById('qr-code').innerHTML = `
+                        <img src="data:image/svg+xml;base64,${data.qr_code}" style="max-width: 300px; height: auto;" alt="UPN QR Code" />
+                    `;
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

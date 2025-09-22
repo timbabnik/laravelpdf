@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UPN QR Code Test (Slovenian Standard)</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .qr-container { text-align: center; margin: 20px 0; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; max-width: 300px; }
+        .upn-string { background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace; margin: 20px 0; text-align: left; white-space: pre-line; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #e7f3ff; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🏦 UPN QR Code Test (Slovenian Standard)</h1>
+    
+    <div class="instructions">
+        <h3>🎯 This is the UPN QR Code format that NLB Pay Flik should recognize!</h3>
+        <p><strong>UPN QR</strong> is the official Slovenian standard for payment QR codes.</p>
+        <ol>
+            <li>Click "Generate UPN QR Code" below</li>
+            <li>Scan the QR code with <strong>NLB Pay Flik</strong></li>
+            <li>This should work (no more "napacna qr koda" error!)</li>
+        </ol>
+    </div>
+    
+    <div class="qr-container">
+        <button onclick="generateUpnQR()">Generate UPN QR Code (Original)</button>
+        <button onclick="generateRealisticUpnQR()">Generate Realistic UPN QR Code</button>
+        <button onclick="generateMinimalUpnQR()">Generate Minimal UPN QR Code</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function generateUpnQR() {
+            try {
+                const response = await fetch('/api/test-upn-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                        <h3>✅ UPN QR Code Generated Successfully!</h3>
+                        <p><strong>UPN String (Slovenian Standard):</strong></p>
+                        <div class="upn-string">${data.upn_string}</div>
+                        <p><strong>Scan this QR code with NLB Pay Flik:</strong></p>
+                        <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                        <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                            <h4>🎉 Expected Result:</h4>
+                            <p>NLB Pay Flik should now recognize this QR code and show payment details instead of "napacna qr koda"!</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function generateRealisticUpnQR() {
+            try {
+                const response = await fetch('/api/test-realistic-upn-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                        <h3>✅ Realistic UPN QR Code Generated!</h3>
+                        <p><strong>Using realistic Slovenian data:</strong></p>
+                        <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <strong>Data used:</strong><br>
+                            IBAN: ${data.data_used.iban}<br>
+                            Company: ${data.data_used.name}<br>
+                            Amount: ${data.data_used.amount}<br>
+                            Reference: ${data.data_used.reference}
+                        </div>
+                        <p><strong>UPN String:</strong></p>
+                        <div class="upn-string">${data.upn_string}</div>
+                        <p><strong>Scan this QR code with NLB Pay Flik:</strong></p>
+                        <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function generateMinimalUpnQR() {
+            try {
+                const response = await fetch('/api/test-minimal-upn-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.innerHTML = `
+                        <h3>✅ Minimal UPN QR Code Generated!</h3>
+                        <p><strong>Using only required fields:</strong></p>
+                        <div style="background: #d1ecf1; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                            <strong>Minimal data:</strong><br>
+                            IBAN: ${data.data_used.iban}<br>
+                            Company: ${data.data_used.name}<br>
+                            Amount: ${data.data_used.amount}<br>
+                            Reference: ${data.data_used.reference}<br>
+                            Purpose: ${data.data_used.purpose}
+                        </div>
+                        <p><strong>UPN String:</strong></p>
+                        <div class="upn-string">${data.upn_string}</div>
+                        <p><strong>Scan this QR code with NLB Pay Flik:</strong></p>
+                        <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

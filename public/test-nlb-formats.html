@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NLB Pay Flik QR Code Format Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .format-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; margin: 10px 0; }
+        .format-string { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>NLB Pay Flik QR Code Format Tests</h1>
+    
+    <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click "Generate NLB Pay Flik Test Formats" below</li>
+            <li>Test each QR code format with NLB Pay Flik</li>
+            <li>See which format works (doesn't show "napacna qr koda")</li>
+            <li>Report back which format number works!</li>
+        </ol>
+    </div>
+    
+    <button onclick="generateNlbFormats()">Generate NLB Pay Flik Test Formats</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function generateNlbFormats() {
+            try {
+                const response = await fetch('/api/test-nlb-pay-flik-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '<h2>Test Results - Try Each Format with NLB Pay Flik:</h2>';
+                    
+                    data.formats.forEach((format, index) => {
+                        const formatDiv = document.createElement('div');
+                        formatDiv.className = 'format-container';
+                        formatDiv.innerHTML = `
+                            <h3>Format ${format.format}</h3>
+                            <div class="format-string">${format.string}</div>
+                            <img src="data:image/svg+xml;base64,${format.qr_code}" class="qr-code" style="max-width: 200px;" />
+                            <p><strong>Test this QR code with NLB Pay Flik</strong></p>
+                        `;
+                        resultsDiv.appendChild(formatDiv);
+                    });
+                    
+                    resultsDiv.innerHTML += `
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                            <h3>📝 Report Back:</h3>
+                            <p>Please test each format and tell me:</p>
+                            <ul>
+                                <li>Which format number works (doesn't show "napacna qr koda")</li>
+                                <li>What happens when you scan the working format</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .qr-container { text-align: center; margin: 20px 0; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; }
+        .instructions { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>QR Code Test Page</h1>
+    
+    <div class="instructions">
+        <h3>Test Instructions:</h3>
+        <ol>
+            <li>Click the "Generate Test QR Code" button below</li>
+            <li>Scan the QR code with your phone's camera</li>
+            <li>It should show "Hello World - This is a test QR code"</li>
+            <li>If this works, the issue is with the SEPA format, not QR code generation</li>
+        </ol>
+    </div>
+    
+    <div class="qr-container">
+        <button onclick="generateTestQR()" style="padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+            Generate Test QR Code
+        </button>
+        
+        <button onclick="generateSepaQR()" style="padding: 10px 20px; font-size: 16px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+            Generate SEPA Test QR Code
+        </button>
+        
+        <button onclick="generateSimplePaymentQR()" style="padding: 10px 20px; font-size: 16px; background: #ffc107; color: black; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px;">
+            Generate Simple Payment QR Code
+        </button>
+        
+        <button onclick="generateSlovenianPaymentQR()" style="padding: 10px 20px; font-size: 16px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Generate Complete Slovenian QR Code
+        </button>
+        
+        <div id="qrResult" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function generateTestQR() {
+            try {
+                const response = await fetch('/api/test-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const qrImage = document.createElement('img');
+                    qrImage.src = 'data:image/svg+xml;base64,' + data.qr_code;
+                    qrImage.className = 'qr-code';
+                    qrImage.style.maxWidth = '300px';
+                    
+                    const resultDiv = document.getElementById('qrResult');
+                    resultDiv.innerHTML = `
+                        <h3>Test QR Code Generated!</h3>
+                        <p><strong>Expected text:</strong> "${data.test_string}"</p>
+                        <p>Scan this QR code with your phone's camera:</p>
+                    `;
+                    resultDiv.appendChild(qrImage);
+                } else {
+                    document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function generateSepaQR() {
+            try {
+                const response = await fetch('/api/test-sepa-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const qrImage = document.createElement('img');
+                    qrImage.src = 'data:image/svg+xml;base64,' + data.qr_code;
+                    qrImage.className = 'qr-code';
+                    qrImage.style.maxWidth = '300px';
+                    
+                    const resultDiv = document.getElementById('qrResult');
+                    resultDiv.innerHTML = `
+                        <h3>SEPA Test QR Code Generated!</h3>
+                        <p><strong>SEPA String:</strong></p>
+                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px; overflow-x: auto;">${data.sepa_string}</pre>
+                        <p>Scan this QR code with your banking app (NLB Klik):</p>
+                    `;
+                    resultDiv.appendChild(qrImage);
+                } else {
+                    document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function generateSimplePaymentQR() {
+            try {
+                const response = await fetch('/api/test-simple-payment-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const qrImage = document.createElement('img');
+                    qrImage.src = 'data:image/svg+xml;base64,' + data.qr_code;
+                    qrImage.className = 'qr-code';
+                    qrImage.style.maxWidth = '300px';
+                    
+                    const resultDiv = document.getElementById('qrResult');
+                    resultDiv.innerHTML = `
+                        <h3>Simple Payment QR Code Generated!</h3>
+                        <p><strong>Payment String:</strong></p>
+                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px; overflow-x: auto;">${data.payment_string}</pre>
+                        <p>Scan this QR code with NLB Klik (simpler format):</p>
+                    `;
+                    resultDiv.appendChild(qrImage);
+                } else {
+                    document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+
+        async function generateSlovenianPaymentQR() {
+            try {
+                const response = await fetch('/api/test-slovenian-payment-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const qrImage = document.createElement('img');
+                    qrImage.src = 'data:image/svg+xml;base64,' + data.qr_code;
+                    qrImage.className = 'qr-code';
+                    qrImage.style.maxWidth = '300px';
+                    
+                    const resultDiv = document.getElementById('qrResult');
+                    resultDiv.innerHTML = `
+                        <h3>Complete Slovenian Payment QR Code Generated!</h3>
+                        <p><strong>Payment String (with all required fields):</strong></p>
+                        <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px; overflow-x: auto;">${data.payment_string}</pre>
+                        <p><strong>Contains all required fields:</strong></p>
+                        <ul style="text-align: left; display: inline-block;">
+                            <li>✅ IBAN prejemnika (SI56191000000123456)</li>
+                            <li>✅ Ime/naziv prejemnika (Test Company)</li>
+                            <li>✅ Naslov prejemnika (Trgovska ulica 5, 1000 Ljubljana)</li>
+                            <li>✅ Znesek (150.00)</li>
+                            <li>✅ Valuta (EUR)</li>
+                            <li>✅ Sklic (INV-001)</li>
+                            <li>✅ Namen plačila (Payment for invoice INV-001)</li>
+                        </ul>
+                        <p>Scan this QR code with NLB Klik:</p>
+                    `;
+                    resultDiv.appendChild(qrImage);
+                } else {
+                    document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('qrResult').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

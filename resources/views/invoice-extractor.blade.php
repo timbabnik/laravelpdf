@@ -835,6 +835,17 @@
                 modalContent.querySelector('#saveToDatabase').addEventListener('click', () => {
                     this.saveInvoiceToDatabase(data);
                 });
+                modalContent.querySelector('#generateQrCode').addEventListener('click', () => {
+                    this.generateSepaQrCode(data);
+                });
+                modalContent.querySelector('#downloadQrCode').addEventListener('click', () => {
+                    this.downloadSepaQrCode(data);
+                });
+                
+                // Format selector change handler
+                modalContent.querySelector('#qrFormatSelector').addEventListener('change', (e) => {
+                    this.updateFormatDescription(e.target.value);
+                });
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) closeModal();
                 });
@@ -951,6 +962,47 @@
                             </div>
                         </div>
                         
+                        <!-- SEPA QR Code Section -->
+                        <div style="background: #f8fafc; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #e2e8f0;">
+                            <h3 style="color: #1e293b; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                🏦 Payment QR Code
+                            </h3>
+                            <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                                <div id="qrCodeContainer" style="display: none;">
+                                    <img id="qrCodeImage" style="border: 2px solid #e2e8f0; border-radius: 8px; max-width: 200px;" />
+                                </div>
+                                <div style="flex: 1; min-width: 200px;">
+                                    <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1rem;">
+                                        Generate a QR code for easy bank transfer. Choose the format that works with your customer's banking app.
+                                    </p>
+                                    
+                                    <!-- Format Selector -->
+                                    <div style="margin-bottom: 1rem;">
+                                        <label style="display: block; font-weight: 500; margin-bottom: 0.5rem; color: #374151;">QR Code Format:</label>
+                                        <select id="qrFormatSelector" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; background: white; width: 100%; max-width: 300px;">
+                                            <option value="sepa">SEPA Format (Works with Revolut)</option>
+                                            <option value="upn">UPN Format (Works with NLB Klik/Flik)</option>
+                                        </select>
+                                        <div id="formatDescription" style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">
+                                            ✅ Compatible with Revolut and most European banking apps
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <button id="generateQrCode" style="background: #3b82f6; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                                            <span>📱</span> Generate QR Code
+                                        </button>
+                                        <button id="downloadQrCode" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: none; align-items: center; gap: 0.5rem;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                                            <span>💾</span> Download QR Code
+                                        </button>
+                                    </div>
+                                    <div id="qrCodeLoading" style="display: none; color: #6b7280; font-size: 0.9rem; margin-top: 0.5rem;">
+                                        Generating QR code...
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Action Buttons -->
                         <div class="action-buttons" style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
                             <button id="viewRawJson" style="background: #6b7280; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#4b5563'" onmouseout="this.style.background='#6b7280'">
@@ -1132,6 +1184,142 @@
                         }
                     }, 300);
                 }, 5000);
+            }
+
+            updateFormatDescription(format) {
+                const descriptionDiv = document.getElementById('formatDescription');
+                if (format === 'sepa') {
+                    descriptionDiv.innerHTML = '✅ Compatible with Revolut and most European banking apps';
+                } else if (format === 'upn') {
+                    descriptionDiv.innerHTML = '✅ Compatible with NLB Klik/Flik and Slovenian banking apps';
+                }
+            }
+
+            async generateSepaQrCode(data) {
+                try {
+                    // Show loading state
+                    const generateButton = document.getElementById('generateQrCode');
+                    const loadingDiv = document.getElementById('qrCodeLoading');
+                    const originalText = generateButton.innerHTML;
+                    
+                    generateButton.disabled = true;
+                    generateButton.innerHTML = '<span>⏳</span> Generating...';
+                    loadingDiv.style.display = 'block';
+                    
+                    // Get selected format
+                    const formatSelector = document.getElementById('qrFormatSelector');
+                    const selectedFormat = formatSelector.value;
+                    
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    // Choose endpoint based on format
+                    const endpoint = selectedFormat === 'upn' ? '/api/generate-upn-qr' : '/api/generate-sepa-qr';
+                    
+                    // Send data to backend
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({
+                            invoice_data: data
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Display QR code
+                        const qrCodeContainer = document.getElementById('qrCodeContainer');
+                        const qrCodeImage = document.getElementById('qrCodeImage');
+                        const downloadButton = document.getElementById('downloadQrCode');
+                        
+                        qrCodeImage.src = 'data:image/svg+xml;base64,' + result.qr_code;
+                        qrCodeContainer.style.display = 'block';
+                        downloadButton.style.display = 'flex';
+                        
+                        const formatName = selectedFormat === 'upn' ? 'UPN' : 'SEPA';
+                        this.showNotification(`${formatName} QR code generated successfully!`, 'success');
+                    } else {
+                        throw new Error(result.error || 'Failed to generate QR code');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error generating QR code:', error);
+                    this.showNotification('Error generating QR code: ' + error.message, 'error');
+                } finally {
+                    // Reset button state
+                    const generateButton = document.getElementById('generateQrCode');
+                    const loadingDiv = document.getElementById('qrCodeLoading');
+                    
+                    generateButton.disabled = false;
+                    generateButton.innerHTML = '<span>📱</span> Generate QR Code';
+                    loadingDiv.style.display = 'none';
+                }
+            }
+
+            async downloadSepaQrCode(data) {
+                try {
+                    // Show loading state
+                    const downloadButton = document.getElementById('downloadQrCode');
+                    const originalText = downloadButton.innerHTML;
+                    
+                    downloadButton.disabled = true;
+                    downloadButton.innerHTML = '<span>⏳</span> Downloading...';
+                    
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    
+                    // Create form data for file download
+                    const formData = new FormData();
+                    formData.append('invoice_data', JSON.stringify(data));
+                    formData.append('_token', csrfToken);
+                    
+                    // Send request for file download
+                    const response = await fetch('/api/download-sepa-qr', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        // Get filename from response headers
+                        const contentDisposition = response.headers.get('Content-Disposition');
+                        let filename = 'SEPA_QR_Code.svg';
+                        if (contentDisposition) {
+                            const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+                            if (filenameMatch) {
+                                filename = filenameMatch[1];
+                            }
+                        }
+                        
+                        // Create blob and download
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                        
+                        this.showNotification('QR code downloaded successfully!', 'success');
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to download QR code');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error downloading QR code:', error);
+                    this.showNotification('Error downloading QR code: ' + error.message, 'error');
+                } finally {
+                    // Reset button state
+                    const downloadButton = document.getElementById('downloadQrCode');
+                    downloadButton.disabled = false;
+                    downloadButton.innerHTML = '<span>💾</span> Download QR Code';
+                }
             }
         }
         

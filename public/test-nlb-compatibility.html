@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NLB Pay Flik Compatibility Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; margin: 10px 0; max-width: 200px; }
+        .test-content { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #f8d7da; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 NLB Pay Flik Compatibility Test</h1>
+    
+    <div class="instructions">
+        <h3>🎯 Final Test: Can NLB Pay Flik scan ANY QR code?</h3>
+        <p>Since all our payment QR codes failed, let's test if NLB Pay Flik can scan basic QR codes at all.</p>
+        <ol>
+            <li>Click "Generate Compatibility Tests" below</li>
+            <li>Try scanning each QR code with NLB Pay Flik</li>
+            <li>See which ones (if any) work</li>
+            <li>This will tell us if the problem is with our format or with NLB Pay Flik itself</li>
+        </ol>
+    </div>
+    
+    <button onclick="generateCompatibilityTests()">Generate Compatibility Tests</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function generateCompatibilityTests() {
+            try {
+                const response = await fetch('/api/test-nlb-compatibility');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '<h2>🧪 Compatibility Test Results:</h2>';
+                    
+                    data.tests.forEach((test, index) => {
+                        const testDiv = document.createElement('div');
+                        testDiv.className = 'test-container';
+                        testDiv.innerHTML = `
+                            <h3>Test ${index + 1}: ${test.name}</h3>
+                            <div class="test-content">${test.content}</div>
+                            <img src="data:image/svg+xml;base64,${test.qr_code}" class="qr-code" />
+                            <p><strong>Try scanning this with NLB Pay Flik</strong></p>
+                        `;
+                        resultsDiv.appendChild(testDiv);
+                    });
+                    
+                    resultsDiv.innerHTML += `
+                        <div style="background: #d1ecf1; padding: 20px; border-radius: 5px; margin-top: 20px;">
+                            <h3>📝 What to Report:</h3>
+                            <ul>
+                                <li>Which QR codes (if any) does NLB Pay Flik recognize?</li>
+                                <li>What happens when you scan each one?</li>
+                                <li>Does it show "napacna qr koda" for ALL of them?</li>
+                                <li>Or does it recognize some basic ones (like URL, phone, email)?</li>
+                            </ul>
+                            <p><strong>This will help us understand if NLB Pay Flik only works with specific payment QR codes or if it has broader compatibility issues.</strong></p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<p style="color: red;">Error: ' + data.error + '</p>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Information Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .info-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #ccc; padding: 10px; margin: 10px 0; max-width: 300px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .info-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
+        .info-title { font-weight: bold; color: #495057; margin-bottom: 10px; }
+        .info-value { color: #212529; font-family: monospace; }
+        button { padding: 15px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #d1ecf1; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>📋 QR Code Information Breakdown</h1>
+    
+    <div class="instructions">
+        <h3>🔍 What Information Goes Into Your QR Code?</h3>
+        <p>This test shows you exactly what information is extracted from your PDF and included in the QR code.</p>
+        <p><strong>When you scan the QR code with Revolut, you should see:</strong></p>
+        <ul>
+            <li>💰 <strong>Amount</strong> - The total amount from your invoice</li>
+            <li>🏦 <strong>Bank Details</strong> - IBAN and bank name</li>
+            <li>📄 <strong>Reference</strong> - Invoice number for tracking</li>
+            <li>📝 <strong>Description</strong> - "Invoice [number]" text</li>
+        </ul>
+    </div>
+    
+    <button onclick="showQrInfo()">Show QR Code Information</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function showQrInfo() {
+            try {
+                const response = await fetch('/api/test-sepa-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="info-container success">
+                            <h3>✅ QR Code Information Breakdown</h3>
+                            
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <div class="info-title">💰 Amount Information</div>
+                                    <div class="info-value">
+                                        Amount: ${data.data_used.amount}<br>
+                                        Currency: ${data.data_used.currency}
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <div class="info-title">🏦 Bank Information</div>
+                                    <div class="info-value">
+                                        IBAN: ${data.data_used.iban}<br>
+                                        BIC: ${data.data_used.bic}<br>
+                                        Bank: ${data.data_used.name}
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <div class="info-title">📄 Invoice Information</div>
+                                    <div class="info-value">
+                                        Invoice Number: ${data.data_used.reference}<br>
+                                        Description: ${data.data_used.text}
+                                    </div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <div class="info-title">🔧 Technical Details</div>
+                                    <div class="info-value">
+                                        Format: SEPA QR Code<br>
+                                        Version: ${data.data_used.version}<br>
+                                        Service: ${data.data_used.service_tag}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h4>📱 QR Code Preview:</h4>
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            
+                            <div style="background: #e2e3e5; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                                <h4>🔍 What You See When Scanning:</h4>
+                                <p><strong>In Revolut, you should see:</strong></p>
+                                <ul>
+                                    <li>💰 <strong>Amount:</strong> ${data.data_used.amount} ${data.data_used.currency}</li>
+                                    <li>🏦 <strong>Recipient:</strong> ${data.data_used.name}</li>
+                                    <li>📄 <strong>Reference:</strong> ${data.data_used.reference}</li>
+                                    <li>📝 <strong>Description:</strong> ${data.data_used.text}</li>
+                                </ul>
+                                <p><strong>This information comes from your PDF invoice data!</strong></p>
+                            </div>
+                            
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 15px; border: 1px solid #ffeaa7;">
+                                <h4>📋 Information Source:</h4>
+                                <p>The QR code uses information extracted from your PDF:</p>
+                                <ul>
+                                    <li><strong>Amount:</strong> From "total_amount" field in your invoice JSON</li>
+                                    <li><strong>Invoice Number:</strong> From "invoice_number" field</li>
+                                    <li><strong>Bank Details:</strong> From your SEPA configuration</li>
+                                    <li><strong>Description:</strong> Auto-generated as "Invoice [number]"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="info-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="info-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

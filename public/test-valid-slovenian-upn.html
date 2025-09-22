@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Valid Slovenian UPN Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #28a745; padding: 10px; margin: 10px 0; max-width: 200px; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #d4edda; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🇸🇮 Valid Slovenian UPN Test</h1>
+    
+    <div class="instructions">
+        <h3>🎯 Testing Valid Slovenian Data</h3>
+        <p><strong>Progress:</strong> NLB Klik now detects QR code but shows "validacija neuspesna"</p>
+        <p><strong>Fix:</strong> Using valid Slovenian names, addresses, and proper IBAN format</p>
+    </div>
+    
+    <button onclick="testValidSlovenianUpn()">Test Valid Slovenian UPN</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testValidSlovenianUpn() {
+            try {
+                const response = await fetch('/api/test-valid-slovenian-upn');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>🇸🇮 Valid Slovenian UPN Test</h3>
+                            <p><strong>Changes made:</strong></p>
+                            <ul>
+                                <li>✅ Valid Slovenian names (Janez Novak)</li>
+                                <li>✅ Real Slovenian addresses (Trubarjeva cesta, Prešernova ulica)</li>
+                                <li>✅ Proper Slovenian purpose (Plačilo računa)</li>
+                                <li>✅ Valid IBAN format (SI56020000000000001)</li>
+                                <li>✅ Proper postal codes (1000, 2000)</li>
+                            </ul>
+                            
+                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                                <div style="flex: 1; min-width: 200px;">
+                                    <h4>📱 Test with NLB Klik:</h4>
+                                    <p>Go to "Plačila" → "Slikaj in plačaj"</p>
+                                    <p><strong>Expected:</strong> Should work now or show different error</p>
+                                    
+                                    <h4>📱 Test with NLB Flik:</h4>
+                                    <p>Try scanning the QR code</p>
+                                    <p><strong>Expected:</strong> Should work or show different error message</p>
+                                </div>
+                            </div>
+                            
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                                <h4>🔍 What to look for:</h4>
+                                <ul>
+                                    <li><strong>NLB Klik:</strong> Does it still say "validacija neuspesna" or does it work?</li>
+                                    <li><strong>NLB Flik:</strong> Does it still say "napacna qr koda" or does it work?</li>
+                                    <li><strong>Different behavior:</strong> Any new error messages or success?</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

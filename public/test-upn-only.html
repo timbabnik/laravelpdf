@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UPN Format Test for NLB</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #dc3545; padding: 10px; margin: 10px 0; max-width: 300px; }
+        .test-content { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; margin: 10px 0; white-space: pre-wrap; }
+        button { padding: 15px 30px; font-size: 18px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .instructions { background: #f8d7da; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🎯 UPN Format Test for NLB Klik/Flik</h1>
+    
+    <div class="instructions">
+        <h3>📱 Test UPN Format with NLB Apps</h3>
+        <p><strong>We know:</strong></p>
+        <ul>
+            <li>✅ SEPA Format + Revolut = WORKS</li>
+            <li>❌ SEPA Format + NLB Klik/Flik = DOESN'T WORK</li>
+        </ul>
+        <p><strong>Now test:</strong></p>
+        <ul>
+            <li>❓ UPN Format + NLB Klik/Flik = ???</li>
+        </ul>
+        <p><strong>This UPN format should work with NLB Klik/Flik if our implementation is correct!</strong></p>
+    </div>
+    
+    <button onclick="generateUpnQr()">Generate UPN QR Code for NLB Test</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function generateUpnQr() {
+            try {
+                const response = await fetch('/api/test-official-upn-qr');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>✅ UPN QR Code Generated</h3>
+                            <div class="test-content">${data.upn_string}</div>
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            <div style="background: #e2e3e5; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                                <h4>📱 Test Instructions:</h4>
+                                <ol>
+                                    <li><strong>Scan this QR code with NLB Klik</strong> - Does it work?</li>
+                                    <li><strong>Scan this QR code with NLB Pay Flik</strong> - Does it work?</li>
+                                    <li><strong>Report back:</strong> Does it show payment details or still "napacna qr koda"?</li>
+                                </ol>
+                                <p><strong>If this works, we can implement a format selector in your main app!</strong></p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>
