@@ -172,7 +172,22 @@ class SepaQrCodeService
     private function buildOfficialUpnString(array $data, $extractedAmount = null): string
     {
         // Use extracted amount if provided, otherwise fallback to hardcoded working amount
-        $amount = $extractedAmount ? (string)$extractedAmount : '24759.15';
+        if ($extractedAmount) {
+            // Convert to float and handle cents properly
+            $numericAmount = floatval($extractedAmount);
+            
+            // Smart detection: if the number is a whole number and very large, it's likely in cents
+            // Examples: 15000 (cents) vs 24759.15 (already in dollars)
+            if ($numericAmount > 1000 && $numericAmount == floor($numericAmount)) {
+                // It's a whole number > 1000, likely in cents
+                $numericAmount = $numericAmount / 100;
+            }
+            
+            // Format to 2 decimal places
+            $amount = number_format($numericAmount, 2, '.', '');
+        } else {
+            $amount = '24759.15';
+        }
         
         // WORKING VERSION - Use the exact same format that works with NLB Klik
         $lines = [];
