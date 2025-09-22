@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UPN Amount Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .test-container { margin: 20px auto; max-width: 600px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .amount-test { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>💰 UPN Amount Test</h1>
+    
+    <div class="info">
+        <h3>✅ UPN QR Code with Amount from PDF</h3>
+        <p><strong>Purpose:</strong> Test that NLB Klik auto-fills the amount from the PDF invoice</p>
+        <p><strong>Amount:</strong> 150.00 EUR (from extracted PDF data)</p>
+        <p><strong>Format:</strong> Correct UPN format with amount in line 8</p>
+    </div>
+    
+    <div class="amount-test">
+        <h3>🎯 What to Test:</h3>
+        <ol style="text-align: left;">
+            <li><strong>Scan QR code with NLB Klik</strong></li>
+            <li><strong>Check if amount is auto-filled:</strong> Should show 150.00 EUR</li>
+            <li><strong>Verify amount field:</strong> Should be pre-populated, not empty</li>
+            <li><strong>Test payment flow:</strong> Should proceed with correct amount</li>
+        </ol>
+    </div>
+    
+    <button onclick="generateUPNWithAmount()">Generate UPN QR with Amount</button>
+    
+    <div id="qr-container" class="test-container" style="display: none;">
+        <h3>📱 Test this QR code with NLB Klik</h3>
+        <div id="qr-code" class="qr-code"></div>
+        <p><strong>Expected:</strong> NLB Klik should auto-fill amount = 150.00 EUR</p>
+    </div>
+
+    <script>
+        async function generateUPNWithAmount() {
+            try {
+                const response = await fetch('/api/test-valid-slovenian-upn');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('qr-container').style.display = 'block';
+                    document.getElementById('qr-code').innerHTML = `
+                        <img src="data:image/svg+xml;base64,${data.qr_code}" style="max-width: 300px; height: auto;" alt="UPN QR Code" />
+                    `;
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

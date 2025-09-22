@@ -1224,7 +1224,14 @@
                             'X-CSRF-TOKEN': csrfToken
                         },
                         body: JSON.stringify({
-                            invoice_data: data
+                            invoice_data: data,
+                            extracted_amount: data.total_amount || data.amount || '0.00', // Pass the extracted amount
+                            bank_details: {
+                                iban: 'SI56 0203 1367 1566 113',
+                                name: data.vendor || data.supplier || data.company_name || 'Test Company d.o.o.',
+                                address: data.vendor_address || data.supplier_address || data.company_address || 'Trubarrrrjeva cesta 1',
+                                city: data.vendor_city || data.supplier_city || data.company_city || 'Ljubljana'
+                            }
                         })
                     });
                     

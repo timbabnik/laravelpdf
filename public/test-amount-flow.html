@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Amount Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #28a745; padding: 10px; margin: 10px 0; max-width: 200px; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .amount-info { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>💰 Test Amount Flow</h1>
+    
+    <div class="test-container">
+        <h3>🎯 Test Amount from Invoice to UPN QR Code</h3>
+        <p>This will test that the amount from the invoice extraction ($150.00) gets properly included in the UPN QR code.</p>
+    </div>
+    
+    <div class="amount-info">
+        <h4>📊 Expected Flow:</h4>
+        <ol>
+            <li><strong>Invoice Extraction:</strong> $150.00 (from PDF)</li>
+            <li><strong>Amount Processing:</strong> Remove $ → 150.00</li>
+            <li><strong>UPN QR Code:</strong> Line 8 = 150.00</li>
+            <li><strong>NLB Klik:</strong> Should show 150.00 EUR</li>
+        </ol>
+    </div>
+    
+    <button onclick="testAmountFlow()">Test Amount Flow</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testAmountFlow() {
+            try {
+                // Simulate the same data that would come from invoice extraction
+                const invoiceData = {
+                    total_amount: '$150.00',
+                    amount: '$150.00',
+                    invoice_number: 'INV-2025-001',
+                    reference: 'SI12-2025-0001',
+                    purpose: 'Placilo racuna',
+                    vendor: 'Test Company d.o.o.',
+                    vendor_address: 'Trubarjeva cesta 1',
+                    vendor_city: 'Ljubljana'
+                };
+                
+                const response = await fetch('/api/generate-upn-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        invoice_data: invoiceData,
+                        bank_details: {
+                            iban: 'SI56 0203 1367 1566 113',
+                            name: 'Test Company d.o.o.',
+                            address: 'Trubarjeva cesta 1',
+                            city: 'Ljubljana'
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>💰 Amount Flow Test</h3>
+                            
+                            <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                                <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                                <div style="flex: 1; min-width: 300px;">
+                                    <h4>📊 Data Sent:</h4>
+                                    <ul>
+                                        <li><strong>Raw Amount:</strong> $150.00</li>
+                                        <li><strong>Expected in QR:</strong> 150.00 (Line 8)</li>
+                                        <li><strong>Currency:</strong> EUR (Line 9)</li>
+                                    </ul>
+                                    
+                                    <h4>📱 Test with NLB Klik:</h4>
+                                    <ul>
+                                        <li><strong>Amount field:</strong> Should show 150.00</li>
+                                        <li><strong>Currency field:</strong> Should show EUR</li>
+                                        <li><strong>Recipient:</strong> Should show Test Company d.o.o.</li>
+                                    </ul>
+                                    
+                                    <p><strong>Status:</strong> ${data.success ? '✅ QR Code Generated' : '❌ Error'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

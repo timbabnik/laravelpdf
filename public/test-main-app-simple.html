@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Main App Simple</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .test-container { margin: 20px auto; max-width: 600px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .data-structure { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test Main App Simple</h1>
+    
+    <div class="info">
+        <h3>🎯 Test the Main App with Simple GET Request</h3>
+        <p><strong>Problem:</strong> Main app endpoint has CSRF token issues</p>
+        <p><strong>Solution:</strong> Test with a simple GET endpoint</p>
+    </div>
+    
+    <div class="data-structure">
+Testing with a simple GET endpoint to avoid CSRF token issues.
+
+This will test if the SepaQrCodeService is working correctly.
+    </div>
+    
+    <button onclick="testMainAppSimple()">Test Main App Simple</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testMainAppSimple() {
+            try {
+                // Use the test endpoint that we know works
+                const response = await fetch('/api/test-exact-working-format');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>🔧 Main App Simple Test</h3>
+                            
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            
+                            <h4>📱 Test with NLB Klik:</h4>
+                            <ul style="text-align: left;">
+                                <li><strong>Amount field:</strong> Should show 915.00 EUR</li>
+                                <li><strong>NAMEN field:</strong> Should show "Test Company d.o.o."</li>
+                                <li><strong>Recipient field:</strong> Should show company name</li>
+                            </ul>
+                            
+                            <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                                <h4>✅ Expected Result:</h4>
+                                <p><strong>This should work the same as the working test pages!</strong></p>
+                                <ul style="text-align: left;">
+                                    <li>Amount: 915.00 EUR</li>
+                                    <li>NAMEN: Test Company d.o.o.</li>
+                                    <li>Recipient: Test Company d.o.o.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1450,17 +1450,21 @@ class InvoiceController extends Controller
             // Use the corrected SepaQrCodeService with proper UPN format
             $qrCodeService = new \App\Services\SepaQrCodeService();
             
+            // Use the correct data structure that matches what the service expects
             $invoiceData = [
-                'amount' => '150.00',
-                'reference' => 'SI12-2025-0001',
+                'total_amount' => '150.00',
+                'invoice_number' => 'SI12-2025-0001',
                 'purpose' => 'Placilo racuna',
-                'name' => 'Test Company d.o.o.',
-                'address' => 'Trubarjeva cesta 1',
-                'city' => 'Ljubljana'
+                'vendor' => 'Test Company d.o.o.',
+                'vendor_address' => 'Trubarjeva cesta 1',
+                'vendor_city' => 'Ljubljana'
             ];
             
             $bankDetails = [
-                'iban' => 'SI56 0203 1367 1566 113'
+                'iban' => 'SI56 0203 1367 1566 113',
+                'name' => 'Test Company d.o.o.',
+                'address' => 'Trubarjeva cesta 1',
+                'city' => 'Ljubljana'
             ];
             
             $qrCodeBase64 = $qrCodeService->generateOfficialUpnQrCode($invoiceData, $bankDetails);
@@ -1476,6 +1480,912 @@ class InvoiceController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Test different UPN field orders to fix amount and company name issues
+     */
+    public function testUpnFieldOrder()
+    {
+        try {
+            $qrCodeService = new \App\Services\SepaQrCodeService();
+            
+            $variations = [];
+            
+            // Test 1: Current format (amount at line 8)
+            $variations[] = [
+                'name' => 'Current Format (Amount at Line 8)',
+                'description' => 'Amount at line 8, company name at line 13',
+                'qr_code' => $this->generateTestUpnQr($qrCodeService, 'current'),
+                'upn_string' => $this->getTestUpnString('current')
+            ];
+            
+            // Test 2: Amount at line 7 (before currency)
+            $variations[] = [
+                'name' => 'Amount at Line 7 (Before Currency)',
+                'description' => 'Amount at line 7, currency at line 8',
+                'qr_code' => $this->generateTestUpnQr($qrCodeService, 'amount_line_7'),
+                'upn_string' => $this->getTestUpnString('amount_line_7')
+            ];
+            
+            // Test 3: Amount at line 9 (after currency)
+            $variations[] = [
+                'name' => 'Amount at Line 9 (After Currency)',
+                'description' => 'Currency at line 8, amount at line 9',
+                'qr_code' => $this->generateTestUpnQr($qrCodeService, 'amount_line_9'),
+                'upn_string' => $this->getTestUpnString('amount_line_9')
+            ];
+            
+            // Test 4: Different company name position
+            $variations[] = [
+                'name' => 'Company Name at Line 12',
+                'description' => 'Company name at line 12 instead of line 13',
+                'qr_code' => $this->generateTestUpnQr($qrCodeService, 'company_line_12'),
+                'upn_string' => $this->getTestUpnString('company_line_12')
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'variations' => $variations
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function generateTestUpnQr($qrCodeService, $format)
+    {
+        // Generate different UPN strings based on format
+        $upnString = $this->buildTestUpnString($format);
+        
+        // Generate QR code from the custom UPN string
+        $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(300)
+            ->generate($upnString);
+        
+        // Encode SVG as base64 for display in HTML
+        return base64_encode($qrCodeSvg);
+    }
+    
+    private function buildTestUpnString($format)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($format) {
+            case 'current':
+                // Current format: amount at line 8, currency at line 9
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'amount_line_7':
+                // Amount at line 7, currency at line 8
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'amount_line_9':
+                // Currency at line 8, amount at line 9
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'company_line_12':
+                // Amount at line 8, currency at line 9, company at line 12
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        
+        if ($format === 'company_line_12') {
+            $lines[] = 'Test Company d.o.o.';
+            $lines[] = 'Trubarjeva cesta 1';
+        } else {
+            $lines[] = 'Test Company d.o.o.';
+            $lines[] = 'Trubarjeva cesta 1';
+        }
+        
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+    
+    private function getTestUpnString($format)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($format) {
+            case 'current':
+                // Current format: amount at line 8, currency at line 9
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'amount_line_7':
+                // Amount at line 7, currency at line 8
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'amount_line_9':
+                // Currency at line 8, amount at line 9
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'company_line_12':
+                // Amount at line 8, currency at line 9, company at line 12
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        
+        if ($format === 'company_line_12') {
+            $lines[] = 'Test Company d.o.o.';
+            $lines[] = 'Trubarjeva cesta 1';
+        } else {
+            $lines[] = 'Test Company d.o.o.';
+            $lines[] = 'Trubarjeva cesta 1';
+        }
+        
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Test different amount positions to fix the amount field issue
+     */
+    public function testAmountPosition()
+    {
+        try {
+            $variations = [];
+            
+            // Test 1: Amount at line 7 (before currency)
+            $variations[] = [
+                'name' => 'Amount at Line 7 (Before Currency)',
+                'description' => 'Amount at line 7, currency at line 8',
+                'qr_code' => $this->generateAmountPositionQr('line_7'),
+                'upn_string' => $this->getAmountPositionString('line_7')
+            ];
+            
+            // Test 2: Amount at line 8 (current position)
+            $variations[] = [
+                'name' => 'Amount at Line 8 (Current Position)',
+                'description' => 'Amount at line 8, currency at line 9',
+                'qr_code' => $this->generateAmountPositionQr('line_8'),
+                'upn_string' => $this->getAmountPositionString('line_8')
+            ];
+            
+            // Test 3: Amount at line 9 (after currency)
+            $variations[] = [
+                'name' => 'Amount at Line 9 (After Currency)',
+                'description' => 'Currency at line 8, amount at line 9',
+                'qr_code' => $this->generateAmountPositionQr('line_9'),
+                'upn_string' => $this->getAmountPositionString('line_9')
+            ];
+            
+            // Test 4: Amount at line 10 (after date)
+            $variations[] = [
+                'name' => 'Amount at Line 10 (After Date)',
+                'description' => 'Currency at line 8, date at line 9, amount at line 10',
+                'qr_code' => $this->generateAmountPositionQr('line_10'),
+                'upn_string' => $this->getAmountPositionString('line_10')
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'variations' => $variations
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function generateAmountPositionQr($position)
+    {
+        $upnString = $this->buildAmountPositionString($position);
+        
+        // Generate QR code from the custom UPN string
+        $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(300)
+            ->generate($upnString);
+        
+        // Encode SVG as base64 for display in HTML
+        return base64_encode($qrCodeSvg);
+    }
+    
+    private function buildAmountPositionString($position)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($position) {
+            case 'line_7':
+                // Amount at line 7, currency at line 8
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'line_8':
+                // Amount at line 8, currency at line 9
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'line_9':
+                // Currency at line 8, amount at line 9
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'line_10':
+                // Currency at line 8, date at line 9, amount at line 10
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '22092025';
+                $lines[] = '150.00';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        $lines[] = 'Test Company d.o.o.';
+        $lines[] = 'Trubarjeva cesta 1';
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+    
+    private function getAmountPositionString($position)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($position) {
+            case 'line_7':
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'line_8':
+                $lines[] = '150.00';
+                $lines[] = 'EUR';
+                break;
+            case 'line_9':
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'line_10':
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '22092025';
+                $lines[] = '150.00';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        $lines[] = 'Test Company d.o.o.';
+        $lines[] = 'Trubarjeva cesta 1';
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Test working variation and try to fix the amount field
+     */
+    public function testWorkingVariation()
+    {
+        try {
+            $variations = [];
+            
+            // Test 1: Working variation (amount at line 9, currency at line 8)
+            $variations[] = [
+                'name' => 'Working Variation (Amount at Line 9)',
+                'description' => 'Currency at line 8, amount at line 9 - NAMEN field shows reference',
+                'qr_code' => $this->generateWorkingVariationQr('amount_line_9'),
+                'upn_string' => $this->getWorkingVariationString('amount_line_9')
+            ];
+            
+            // Test 2: Try amount at line 8 with currency at line 7
+            $variations[] = [
+                'name' => 'Amount at Line 8, Currency at Line 7',
+                'description' => 'Currency at line 7, amount at line 8',
+                'qr_code' => $this->generateWorkingVariationQr('amount_line_8_currency_7'),
+                'upn_string' => $this->getWorkingVariationString('amount_line_8_currency_7')
+            ];
+            
+            // Test 3: Try amount at line 10 with currency at line 8
+            $variations[] = [
+                'name' => 'Amount at Line 10, Currency at Line 8',
+                'description' => 'Currency at line 8, amount at line 10',
+                'qr_code' => $this->generateWorkingVariationQr('amount_line_10_currency_8'),
+                'upn_string' => $this->getWorkingVariationString('amount_line_10_currency_8')
+            ];
+            
+            // Test 4: Try amount at line 11 with currency at line 8
+            $variations[] = [
+                'name' => 'Amount at Line 11, Currency at Line 8',
+                'description' => 'Currency at line 8, amount at line 11',
+                'qr_code' => $this->generateWorkingVariationQr('amount_line_11_currency_8'),
+                'upn_string' => $this->getWorkingVariationString('amount_line_11_currency_8')
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'variations' => $variations
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function generateWorkingVariationQr($variation)
+    {
+        $upnString = $this->buildWorkingVariationString($variation);
+        
+        // Generate QR code from the custom UPN string
+        $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(300)
+            ->generate($upnString);
+        
+        // Encode SVG as base64 for display in HTML
+        return base64_encode($qrCodeSvg);
+    }
+    
+    private function buildWorkingVariationString($variation)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($variation) {
+            case 'amount_line_9':
+                // Currency at line 8, amount at line 9 (working variation)
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_8_currency_7':
+                // Currency at line 7, amount at line 8
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_10_currency_8':
+                // Currency at line 8, amount at line 10
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_11_currency_8':
+                // Currency at line 8, amount at line 11
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '';
+                $lines[] = '';
+                $lines[] = '150.00';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        $lines[] = 'Test Company d.o.o.';
+        $lines[] = 'Trubarjeva cesta 1';
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+    
+    private function getWorkingVariationString($variation)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        
+        switch ($variation) {
+            case 'amount_line_9':
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_8_currency_7':
+                $lines[] = 'EUR';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_10_currency_8':
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '';
+                $lines[] = '150.00';
+                break;
+            case 'amount_line_11_currency_8':
+                $lines[] = '';
+                $lines[] = 'EUR';
+                $lines[] = '';
+                $lines[] = '';
+                $lines[] = '150.00';
+                break;
+        }
+        
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        $lines[] = 'Test Company d.o.o.';
+        $lines[] = 'Trubarjeva cesta 1';
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Test the confirmed working format
+     */
+    public function testConfirmedWorking()
+    {
+        try {
+            // Generate the confirmed working format: Amount at Line 8, Currency at Line 7
+            $upnString = $this->buildConfirmedWorkingString();
+            
+            // Generate QR code from the custom UPN string
+            $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(300)
+                ->generate($upnString);
+            
+            // Encode SVG as base64 for display in HTML
+            $qrCodeBase64 = base64_encode($qrCodeSvg);
+            
+            return response()->json([
+                'success' => true,
+                'qr_code' => $qrCodeBase64,
+                'message' => 'Confirmed working UPN format generated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function buildConfirmedWorkingString()
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = 'EUR';        // Currency at line 7
+        $lines[] = '150.00';     // Amount at line 8
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'SI12-2025-0001';
+        $lines[] = 'Test Company d.o.o.';
+        $lines[] = 'Trubarjeva cesta 1';
+        $lines[] = 'Ljubljana';
+        $lines[] = 'Placilo racuna';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+
+    /**
+     * Test different field orders to fix the NAMEN field issue
+     */
+    public function testFieldOrder()
+    {
+        try {
+            $variations = [];
+            
+            // Test 1: Current format (company name at line 12, address at line 13)
+            $variations[] = [
+                'name' => 'Current Format (Company at Line 12)',
+                'description' => 'Company name at line 12, address at line 13',
+                'qr_code' => $this->generateFieldOrderQr('current'),
+                'upn_string' => $this->getFieldOrderString('current')
+            ];
+            
+            // Test 2: Company name at line 11, address at line 12
+            $variations[] = [
+                'name' => 'Company at Line 11, Address at Line 12',
+                'description' => 'Company name at line 11, address at line 12',
+                'qr_code' => $this->generateFieldOrderQr('company_line_11'),
+                'upn_string' => $this->getFieldOrderString('company_line_11')
+            ];
+            
+            // Test 3: Company name at line 13, address at line 14
+            $variations[] = [
+                'name' => 'Company at Line 13, Address at Line 14',
+                'description' => 'Company name at line 13, address at line 14',
+                'qr_code' => $this->generateFieldOrderQr('company_line_13'),
+                'upn_string' => $this->getFieldOrderString('company_line_13')
+            ];
+            
+            // Test 4: Company name at line 14, address at line 15
+            $variations[] = [
+                'name' => 'Company at Line 14, Address at Line 15',
+                'description' => 'Company name at line 14, address at line 15',
+                'qr_code' => $this->generateFieldOrderQr('company_line_14'),
+                'upn_string' => $this->getFieldOrderString('company_line_14')
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'variations' => $variations
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function generateFieldOrderQr($order)
+    {
+        $upnString = $this->buildFieldOrderString($order);
+        
+        // Generate QR code from the custom UPN string
+        $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+            ->size(300)
+            ->generate($upnString);
+        
+        // Encode SVG as base64 for display in HTML
+        return base64_encode($qrCodeSvg);
+    }
+    
+    private function buildFieldOrderString($order)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = 'EUR';
+        $lines[] = '915.00';
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'TS-2025-045';
+        
+        switch ($order) {
+            case 'current':
+                // Current format: company at line 12, address at line 13
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_11':
+                // Company at line 11, address at line 12
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_13':
+                // Company at line 13, address at line 14
+                $lines[] = '';
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_14':
+                // Company at line 14, address at line 15
+                $lines[] = '';
+                $lines[] = '';
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+        }
+        
+        $lines[] = 'Payment for invoice TS-2025-045';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+    
+    private function getFieldOrderString($order)
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = 'EUR';
+        $lines[] = '915.00';
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'TS-2025-045';
+        
+        switch ($order) {
+            case 'current':
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_11':
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_13':
+                $lines[] = '';
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+            case 'company_line_14':
+                $lines[] = '';
+                $lines[] = '';
+                $lines[] = 'Test Company d.o.o.';
+                $lines[] = 'Trubarjeva cesta 1';
+                $lines[] = 'Ljubljana';
+                break;
+        }
+        
+        $lines[] = 'Payment for invoice TS-2025-045';
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Test the exact working format that we confirmed works
+     */
+    public function testExactWorkingFormat()
+    {
+        try {
+            // Generate the exact working format that we confirmed works
+            $upnString = $this->buildExactWorkingString();
+            
+            // Generate QR code from the custom UPN string
+            $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(300)
+                ->generate($upnString);
+            
+            // Encode SVG as base64 for display in HTML
+            $qrCodeBase64 = base64_encode($qrCodeSvg);
+            
+            return response()->json([
+                'success' => true,
+                'qr_code' => $qrCodeBase64,
+                'message' => 'Exact working UPN format generated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function buildExactWorkingString()
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = 'EUR';        // Currency at line 7
+        $lines[] = '915.00';     // Amount at line 8
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = 'TS-2025-045';
+        $lines[] = 'Test Company d.o.o.';  // Company name at line 12
+        $lines[] = 'Trubarjeva cesta 1';   // Address at line 13
+        $lines[] = 'Ljubljana';            // City at line 14
+        $lines[] = 'Payment for invoice TS-2025-045';  // Purpose at line 15
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
+    }
+
+    /**
+     * Test with large amount to see if NLB Klik has issues with large amounts
+     */
+    public function testLargeAmount()
+    {
+        try {
+            // Generate the exact same amount as the main app extracted
+            $upnString = $this->buildLargeAmountString();
+            
+            // Generate QR code from the custom UPN string
+            $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')
+                ->size(300)
+                ->generate($upnString);
+            
+            // Encode SVG as base64 for display in HTML
+            $qrCodeBase64 = base64_encode($qrCodeSvg);
+            
+            return response()->json([
+                'success' => true,
+                'qr_code' => $qrCodeBase64,
+                'message' => 'Large amount UPN format generated successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    private function buildLargeAmountString()
+    {
+        $lines = [];
+        $lines[] = 'UPNQR';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = '';
+        $lines[] = 'EUR';        // Currency at line 7
+        $lines[] = price;   // Amount at line 8 - same as main app
+        $lines[] = '';
+        $lines[] = 'SI56020313671566113';
+        $lines[] = '25-390-000478';
+        $lines[] = 'Test Company d.o.o.';  // Company name at line 12
+        $lines[] = 'Trubarjeva cesta 1';   // Address at line 13
+        $lines[] = 'Ljubljana';            // City at line 14
+        $lines[] = 'Payment for invoice 25-390-000478';  // Purpose at line 15
+        
+        // Add empty lines to reach 34
+        while (count($lines) < 34) {
+            $lines[] = '';
+        }
+        
+        // Join with CRLF line endings
+        $content = implode("\r\n", $lines);
+        
+        // Convert to Windows-1250 encoding
+        return iconv('UTF-8', 'Windows-1250//TRANSLIT', $content);
     }
 
     /**
@@ -1611,14 +2521,16 @@ class InvoiceController extends Controller
         try {
             $request->validate([
                 'invoice_data' => 'required|array',
+                'extracted_amount' => 'sometimes|numeric',
                 'bank_details' => 'sometimes|array'
             ]);
 
             $invoiceData = $request->input('invoice_data');
+            $extractedAmount = $request->input('extracted_amount', '0.00');
             $bankDetails = $request->input('bank_details', []);
 
             $qrCodeService = new SepaQrCodeService();
-            $qrCodeBase64 = $qrCodeService->generateOfficialUpnQrCode($invoiceData, $bankDetails);
+            $qrCodeBase64 = $qrCodeService->generateOfficialUpnQrCode($invoiceData, $bankDetails, $extractedAmount);
 
             return response()->json([
                 'success' => true,

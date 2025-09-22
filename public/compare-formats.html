@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Compare SEPA vs UPN Formats</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #28a745; padding: 10px; margin: 10px 0; max-width: 200px; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .comparison { display: flex; gap: 20px; flex-wrap: wrap; }
+        .format-card { border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 15px 0; flex: 1; min-width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>🔄 Compare SEPA vs UPN Formats</h1>
+    
+    <div class="test-container">
+        <h3>🎯 Compare Working SEPA vs UPN Formats</h3>
+        <p>Let's see what's different between the working SEPA format (Revolut) and the UPN format (NLB Klik).</p>
+    </div>
+    
+    <button onclick="compareFormats()">Compare Both Formats</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function compareFormats() {
+            try {
+                // Test SEPA format
+                const sepaResponse = await fetch('/api/generate-sepa-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        invoice_data: {
+                            amount: '150.00',
+                            reference: 'SI12-2025-0001',
+                            purpose: 'Placilo racuna'
+                        },
+                        bank_details: {
+                            iban: 'SI56 0203 1367 1566 113',
+                            name: 'Test Company d.o.o.',
+                            address: 'Trubarjeva cesta 1',
+                            city: 'Ljubljana'
+                        }
+                    })
+                });
+                
+                const sepaData = await sepaResponse.json();
+                
+                // Test UPN format
+                const upnResponse = await fetch('/api/generate-upn-qr', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    },
+                    body: JSON.stringify({
+                        invoice_data: {
+                            amount: '150.00',
+                            reference: 'SI12-2025-0001',
+                            purpose: 'Placilo racuna'
+                        },
+                        bank_details: {
+                            iban: 'SI56 0203 1367 1566 113',
+                            name: 'Test Company d.o.o.',
+                            address: 'Trubarjeva cesta 1',
+                            city: 'Ljubljana'
+                        }
+                    })
+                });
+                
+                const upnData = await upnResponse.json();
+                
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="test-container success">
+                        <h3>🔄 SEPA vs UPN Comparison</h3>
+                        
+                        <div class="comparison">
+                            <div class="format-card">
+                                <h4>✅ SEPA Format (Works with Revolut)</h4>
+                                <img src="data:image/svg+xml;base64,${sepaData.qr_code}" class="qr-code" />
+                                <p><strong>Test with Revolut:</strong> Should show amount 150.00 EUR</p>
+                                <p><strong>Status:</strong> ${sepaData.success ? '✅ Generated' : '❌ Error'}</p>
+                            </div>
+                            
+                            <div class="format-card">
+                                <h4>❌ UPN Format (Not working with NLB Klik)</h4>
+                                <img src="data:image/svg+xml;base64,${upnData.qr_code}" class="qr-code" />
+                                <p><strong>Test with NLB Klik:</strong> Should show amount 150.00 EUR</p>
+                                <p><strong>Status:</strong> ${upnData.success ? '✅ Generated' : '❌ Error'}</p>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #d1ecf1; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                            <h4>🔍 What to Test:</h4>
+                            <ol>
+                                <li><strong>SEPA QR:</strong> Scan with Revolut - should show amount</li>
+                                <li><strong>UPN QR:</strong> Scan with NLB Klik - should show amount</li>
+                                <li><strong>Compare:</strong> What's different between them?</li>
+                            </ol>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

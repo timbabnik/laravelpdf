@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test UPN Amounts</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .qr-code { border: 2px solid #28a745; padding: 10px; margin: 10px 0; max-width: 200px; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .amount-test { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>💰 Test UPN Amounts</h1>
+    
+    <div class="test-container">
+        <h3>🎯 Test Different Amount Formats</h3>
+        <p>Testing different amount formats to see which one NLB Klik recognizes.</p>
+    </div>
+    
+    <div class="amount-test">
+        <h4>🔍 What to Test:</h4>
+        <ol>
+            <li><strong>Test each QR code with NLB Klik</strong></li>
+            <li><strong>Check if amount field is populated</strong></li>
+            <li><strong>Note which format works</strong></li>
+        </ol>
+    </div>
+    
+    <button onclick="testAmounts()">Test Different Amounts</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testAmounts() {
+            try {
+                const amounts = [
+                    { name: '150.00', value: '150.00' },
+                    { name: '150', value: '150' },
+                    { name: '150,00', value: '150,00' },
+                    { name: '150.50', value: '150.50' }
+                ];
+                
+                let resultsHTML = '<div class="test-container success"><h3>💰 UPN Amount Tests</h3>';
+                
+                for (const amount of amounts) {
+                    try {
+                        const response = await fetch('/api/test-valid-slovenian-upn');
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            resultsHTML += `
+                                <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                                    <h4>Amount: ${amount.name}</h4>
+                                    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                        <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                                        <div>
+                                            <p><strong>Test with NLB Klik:</strong></p>
+                                            <p>Does the amount field show ${amount.name}?</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } catch (error) {
+                        resultsHTML += `<p>Error testing ${amount.name}: ${error.message}</p>`;
+                    }
+                }
+                
+                resultsHTML += '</div>';
+                document.getElementById('results').innerHTML = resultsHTML;
+                
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

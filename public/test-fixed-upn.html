@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Fixed UPN Format</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .test-container { margin: 20px auto; max-width: 600px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .data-structure { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>✅ Test Fixed UPN Format</h1>
+    
+    <div class="info">
+        <h3>🔧 Data Structure Fixed</h3>
+        <p><strong>Problem:</strong> NLB Klik recognized UPN format but fields were empty</p>
+        <p><strong>Solution:</strong> Fixed data structure to match service expectations</p>
+    </div>
+    
+    <div class="data-structure">
+Fixed Data Structure:
+{
+    "total_amount": "150.00",
+    "invoice_number": "SI12-2025-0001", 
+    "purpose": "Placilo racuna",
+    "vendor": "Test Company d.o.o.",
+    "vendor_address": "Trubarjeva cesta 1",
+    "vendor_city": "Ljubljana"
+}
+
+Bank Details:
+{
+    "iban": "SI56 0203 1367 1566 113",
+    "name": "Test Company d.o.o.",
+    "address": "Trubarjeva cesta 1", 
+    "city": "Ljubljana"
+}
+    </div>
+    
+    <button onclick="testFixedUPN()">Test Fixed UPN Format</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testFixedUPN() {
+            try {
+                const response = await fetch('/api/test-valid-slovenian-upn');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>✅ Fixed UPN Format Test</h3>
+                            
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            
+                            <h4>📱 Test with NLB Klik:</h4>
+                            <ul style="text-align: left;">
+                                <li><strong>Amount field:</strong> Should now show 150.00 EUR</li>
+                                <li><strong>Recipient field:</strong> Should show Test Company d.o.o.</li>
+                                <li><strong>Reference field:</strong> Should show SI12-2025-0001</li>
+                                <li><strong>Purpose field:</strong> Should show Placilo racuna</li>
+                            </ul>
+                            
+                            <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                                <h4>✅ Expected Result:</h4>
+                                <p><strong>NLB Klik should now show all fields populated!</strong></p>
+                                <ul style="text-align: left;">
+                                    <li>Amount: 150.00 EUR</li>
+                                    <li>Recipient: Test Company d.o.o.</li>
+                                    <li>Address: Trubarjeva cesta 1, Ljubljana</li>
+                                    <li>Reference: SI12-2025-0001</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

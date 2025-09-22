@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Test Official UPN</title>
+    <title>Test UPN Format</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         .test-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
@@ -13,67 +13,57 @@
     </style>
 </head>
 <body>
-    <h1>🏛️ Test Official UPN Format</h1>
+    <h1>🧪 Test UPN Format</h1>
     
     <div class="test-container">
-        <h3>🎯 Test Official UPN Format from Specification</h3>
-        <p>Using the exact UPN format from the official specification you provided.</p>
+        <h3>🎯 Test UPN Format Structure</h3>
+        <p>This will show the exact UPN format being generated and test it with NLB Klik.</p>
     </div>
     
-    <div class="upn-structure">
-UPNQR
-(empty)
-(empty - IBAN plačnika)
-(empty - referenca plačnika)
-(empty - ime plačnika)
-(empty - naslov plačnika)
-(empty - kraj plačnika)
-150.00 (znesek) ← NLB Klik should read this
-EUR (valuta)
-(empty - datum)
-SI56020313671566113 (IBAN prejemnika)
-SI12-2025-0001 (referenca prejemnika)
-Test Company d.o.o. (ime prejemnika)
-Trubarjeva cesta 1 (naslov prejemnika)
-Ljubljana (kraj prejemnika)
-Placilo racuna (namen plačila)
-(empty lines 17-34)
-    </div>
-    
-    <button onclick="testOfficialUPN()">Test Official UPN Format</button>
+    <button onclick="testUPNFormat()">Test UPN Format</button>
     
     <div id="results"></div>
 
     <script>
-        async function testOfficialUPN() {
+        async function testUPNFormat() {
             try {
-                const response = await fetch('/api/test-official-upn-format');
+                const response = await fetch('/api/test-valid-slovenian-upn');
                 const data = await response.json();
                 
                 if (data.success) {
                     const resultsDiv = document.getElementById('results');
                     resultsDiv.innerHTML = `
                         <div class="test-container success">
-                            <h3>🏛️ Official UPN Format Test</h3>
+                            <h3>🧪 UPN Format Test</h3>
                             
                             <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-                                <img src="data:image/svg+xml;base64,${data.formats[0].qr_code}" class="qr-code" />
+                                <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
                                 <div style="flex: 1; min-width: 300px;">
+                                    <h4>📊 Expected UPN Structure:</h4>
+                                    <div class="upn-structure">Line 1: UPNQR
+Line 2: (empty)
+Line 3: (empty - payer IBAN)
+Line 4: (empty - payer reference)
+Line 5: (empty - payer name)
+Line 6: (empty - payer address)
+Line 7: (empty - payer city)
+Line 8: 150.00 (AMOUNT)
+Line 9: EUR (CURRENCY)
+Line 10: (empty - date)
+Line 11: SI56020313671566113 (recipient IBAN)
+Line 12: SI12-2025-0001 (reference)
+Line 13: Test Company d.o.o. (recipient name)
+Line 14: Trubarjeva cesta 1 (recipient address)
+Line 15: Ljubljana (recipient city)
+Line 16: Placilo racuna (purpose)
+Lines 17-34: (empty)</div>
+                                    
                                     <h4>📱 Test with NLB Klik:</h4>
                                     <ul>
                                         <li><strong>Amount field:</strong> Should show 150.00</li>
                                         <li><strong>Currency field:</strong> Should show EUR</li>
-                                        <li><strong>Recipient field:</strong> Should show Test Company d.o.o.</li>
-                                        <li><strong>Reference field:</strong> Should show SI12-2025-0001</li>
-                                    </ul>
-                                    
-                                    <h4>🔍 If it still doesn't work:</h4>
-                                    <p>The issue might be:</p>
-                                    <ul>
-                                        <li>NLB Klik expects different UPN format</li>
-                                        <li>Missing required fields</li>
-                                        <li>Wrong encoding or line endings</li>
-                                        <li>NLB Klik doesn't support UPN QR codes</li>
+                                        <li><strong>Recipient:</strong> Should show Test Company d.o.o.</li>
+                                        <li><strong>Reference:</strong> Should show SI12-2025-0001</li>
                                     </ul>
                                 </div>
                             </div>

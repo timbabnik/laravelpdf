@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Confirmed Working Format</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .test-container { margin: 20px auto; max-width: 600px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .data-structure { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🎉 Confirmed Working Format!</h1>
+    
+    <div class="info">
+        <h3>✅ Found the Working UPN Format!</h3>
+        <p><strong>Second QR code works:</strong> Amount shows 150,00 EUR and NAMEN shows TEST COMPANY D.O.O.</p>
+        <p><strong>Format:</strong> Amount at Line 8, Currency at Line 7</p>
+    </div>
+    
+    <div class="data-structure">
+Working Format (Amount at Line 8, Currency at Line 7):
+UPNQR
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+EUR ← Currency at line 7
+150.00 ← Amount at line 8
+(empty)
+SI56020313671566113
+SI12-2025-0001
+Test Company d.o.o.
+Trubarjeva cesta 1
+Ljubljana
+Placilo racuna
+    </div>
+    
+    <button onclick="testConfirmedWorking()">Test Confirmed Working Format</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testConfirmedWorking() {
+            try {
+                const response = await fetch('/api/test-confirmed-working');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = `
+                        <div class="test-container success">
+                            <h3>🎉 Confirmed Working Format Test</h3>
+                            
+                            <img src="data:image/svg+xml;base64,${data.qr_code}" class="qr-code" />
+                            
+                            <h4>📱 Test with NLB Klik:</h4>
+                            <ul style="text-align: left;">
+                                <li><strong>Amount field:</strong> Should show 150.00 EUR ✅</li>
+                                <li><strong>NAMEN field:</strong> Should show TEST COMPANY D.O.O. ✅</li>
+                                <li><strong>Recipient field:</strong> Should show company name</li>
+                            </ul>
+                            
+                            <div style="background: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                                <h4>✅ Expected Result:</h4>
+                                <p><strong>This should work perfectly with NLB Klik!</strong></p>
+                                <ul style="text-align: left;">
+                                    <li>Amount: 150.00 EUR</li>
+                                    <li>NAMEN: TEST COMPANY D.O.O.</li>
+                                    <li>Recipient: Test Company d.o.o.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>

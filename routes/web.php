@@ -41,6 +41,13 @@ Route::get('/api/test-official-upn-qr', [InvoiceController::class, 'testOfficial
 Route::get('/api/test-both-formats', [InvoiceController::class, 'testBothFormats']);
 Route::get('/api/test-upn-variations', [InvoiceController::class, 'testUpnVariations']);
 Route::get('/api/test-valid-slovenian-upn', [InvoiceController::class, 'testValidSlovenianUpn']);
+Route::get('/api/test-upn-field-order', [InvoiceController::class, 'testUpnFieldOrder']);
+Route::get('/api/test-amount-position', [InvoiceController::class, 'testAmountPosition']);
+Route::get('/api/test-working-variation', [InvoiceController::class, 'testWorkingVariation']);
+Route::get('/api/test-confirmed-working', [InvoiceController::class, 'testConfirmedWorking']);
+Route::get('/api/test-field-order', [InvoiceController::class, 'testFieldOrder']);
+Route::get('/api/test-exact-working-format', [InvoiceController::class, 'testExactWorkingFormat']);
+Route::get('/api/test-large-amount', [InvoiceController::class, 'testLargeAmount']);
 Route::get('/api/test-real-upn-examples', [InvoiceController::class, 'testRealUpnExamples']);
 Route::get('/api/test-real-ibans', [InvoiceController::class, 'testRealIbans']);
 Route::get('/api/test-official-upn-format', [InvoiceController::class, 'testOfficialUpnFormat']);

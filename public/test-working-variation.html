@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Working Variation</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .test-container { margin: 20px auto; max-width: 600px; }
+        .qr-code { border: 2px solid #28a745; padding: 20px; margin: 20px 0; }
+        .info { background: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .success { background: #d1ecf1; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        button { padding: 15px 30px; font-size: 18px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 20px 0; }
+        .data-structure { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Test Working Variation</h1>
+    
+    <div class="info">
+        <h3>✅ Found Working Variation!</h3>
+        <p><strong>Third QR code worked differently:</strong> NAMEN field shows "SI12-2025-0001" instead of "Test Company d.o.o."</p>
+        <p><strong>This means:</strong> NLB Klik is reading fields in different order with this format!</p>
+    </div>
+    
+    <div class="data-structure">
+Working Variation (Amount at Line 9):
+UPNQR
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+(empty)
+EUR
+150.00 ← Amount at line 9
+(empty)
+SI56020313671566113
+SI12-2025-0001 ← This shows in NAMEN field
+Test Company d.o.o.
+Trubarjeva cesta 1
+Ljubljana
+Placilo racuna
+    </div>
+    
+    <button onclick="testWorkingVariation()">Test Working Variation</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testWorkingVariation() {
+            try {
+                const response = await fetch('/api/test-working-variation');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const resultsDiv = document.getElementById('results');
+                    let html = '<div class="test-container success"><h3>🎯 Working Variation Test</h3>';
+                    
+                    data.variations.forEach((variation, index) => {
+                        html += `
+                            <div style="border: 2px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                                <h4>${variation.name}</h4>
+                                <p style="color: #6c757d; font-size: 0.9rem;">${variation.description}</p>
+                                
+                                <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                                    <img src="data:image/svg+xml;base64,${variation.qr_code}" class="qr-code" />
+                                    <div style="flex: 1; min-width: 200px;">
+                                        <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; font-size: 0.8rem;">${variation.upn_string}</div>
+                                        
+                                        <div style="background: #e2e3e5; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                                            <strong>📱 Test with NLB Klik:</strong>
+                                            <ul style="margin: 5px 0; padding-left: 20px;">
+                                                <li>Does amount field show 150.00?</li>
+                                                <li>Does NAMEN field show reference or company name?</li>
+                                                <li>Does it work better than previous format?</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        <div style="background: #d1ecf1; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                            <h4>🔍 What to Look For:</h4>
+                            <ul style="text-align: left;">
+                                <li><strong>Amount field:</strong> Should show 150.00 EUR (not 0,00)</li>
+                                <li><strong>NAMEN field:</strong> Should show reference or company name</li>
+                                <li><strong>Recipient field:</strong> Should show company name</li>
+                            </ul>
+                        </div>
+                    </div>`;
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + data.error + '</p></div>';
+                }
+            } catch (error) {
+                document.getElementById('results').innerHTML = '<div class="test-container error"><p>Error: ' + error.message + '</p></div>';
+            }
+        }
+    </script>
+</body>
+</html>
