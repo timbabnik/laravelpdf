@@ -191,22 +191,27 @@ class SepaQrCodeService
         
         // WORKING VERSION - Use the exact same format that works with NLB Klik
         $lines = [];
-        $lines[] = 'UPNQR';
-        $lines[] = '';
-        $lines[] = '';
-        $lines[] = '';
-        $lines[] = '';
-        $lines[] = '';
-        $lines[] = '';
-        $lines[] = 'EUR';        // Currency at line 7
-        $lines[] = $amount;      // Amount at line 8 - Use extracted amount or fallback
-        $lines[] = '';
-        $lines[] = 'SI56020313671566113';
-        $lines[] = '25-390-000478';
-        $lines[] = 'Test Company d.o.o.';  // Company name at line 12
-        $lines[] = 'Trubarjeva cesta 1';   // Address at line 13
-        $lines[] = 'Ljubljana';            // City at line 14
-        $lines[] = 'Payment for invoice 25-390-000478';  // Purpose at line 15
+$lines[] = 'UPNQR';        // 1
+$lines[] = '';             // 2
+$lines[] = '';             // 3
+$lines[] = '';             // 4
+$lines[] = '';             // 5
+$lines[] = '';             // 6 payer name (empty)
+$lines[] = '';             // 7 payer address (empty)
+$lines[] = '';             // 8 payer city (empty)
+$lines[] = '0000024759.15';// 9 amount, zero-padded to 11 chars
+$lines[] = 'EUR';          // 10 currency
+$lines[] = '';             // 11 due date
+$lines[] = 'Company d.o.o.'; // 12 recipient name
+$lines[] = 'Trubarjeva cesta 1'; // 13 recipient address
+$lines[] = '1000 Ljubljana';    // 14 recipient postal+city
+$lines[] = 'SI56192001234567892'; // 15 recipient IBAN (19 chars!)
+$lines[] = 'SI00';         // 16 reference model
+$lines[] = '25-390-000478';// 17 reference number
+$lines[] = 'OTHR';         // 18 purpose code
+$lines[] = 'Payment for invoice 25-390-000478'; // 19 purpose description
+$lines[] = '';    
+                // Bank country at line 20
         
         // Add empty lines to reach 34
         while (count($lines) < 34) {
