@@ -309,10 +309,7 @@ $lines[] = '';
         $lines[] = $data['iban'];
         
         // Currency (Revolut expects this BEFORE amount)
-        $lines[] = $data['currency'];
-        
-        // Amount (EUR.XX format)
-        $lines[] = $data['amount'];
+        $lines[] = $data['currency'] . $data['amount'];
         
         // Purpose (optional, keep it simple)
         $lines[] = $this->sanitizeString($data['purpose'] ?? '');

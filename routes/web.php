@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\InvoiceController;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 
 
@@ -24,6 +25,28 @@ Route::post('/api/save-invoice', [InvoiceController::class, 'saveInvoiceData']);
 
 // SEPA QR code generation API routes
 Route::post('/api/generate-sepa-qr', [InvoiceController::class, 'generateSepaQrCode']);
+
+// Simple QR code generator for testing
+Route::post('/api/generate-qr', function(Request $request) {
+    try {
+        $text = $request->input('text');
+        if (!$text) {
+            return response()->json(['success' => false, 'error' => 'Text is required']);
+        }
+        
+        $qrCode = QrCode::format('svg')
+            ->size(300)
+            ->margin(2)
+            ->generate($text);
+            
+        return response()->json([
+            'success' => true,
+            'qr_code' => base64_encode($qrCode)
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'error' => $e->getMessage()]);
+    }
+});
 Route::post('/api/generate-upn-qr', [InvoiceController::class, 'generateUpnQrCode']);
 Route::post('/api/download-sepa-qr', [InvoiceController::class, 'downloadSepaQrCode']);
 

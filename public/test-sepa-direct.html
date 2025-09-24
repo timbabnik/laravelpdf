@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEPA QR Code Tests</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .qr-code { margin: 10px 0; }
+        .description { font-weight: bold; color: #333; }
+        .structure { font-family: monospace; background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .qr-display { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+        canvas { border: 1px solid #ddd; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <h1>SEPA QR Code Structure Tests for Revolut</h1>
+    <p>Testing different field orders to find the one that works with Revolut</p>
+
+    <div class="test-section">
+        <div class="description">Test 1: Standard EPC (Amount before Currency)</div>
+        <div class="structure">
+BCD<br>
+002<br>
+1<br>
+SCT<br>
+LJBASI2X<br>
+Test Company d.o.o.<br>
+SI56020313671566113<br>
+<strong>5.00</strong><br>
+<strong>EUR</strong><br>
+<br>
+TS-2025-045<br>
+Invoice TS-2025-045
+        </div>
+        <div class="qr-display">
+            <canvas id="qr1"></canvas>
+            <p><strong>Scan this QR code with Revolut and check if it shows 5.00 €</strong></p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="description">Test 2: Currency before Amount</div>
+        <div class="structure">
+BCD<br>
+002<br>
+1<br>
+SCT<br>
+LJBASI2X<br>
+Test Company d.o.o.<br>
+SI56020313671566113<br>
+<strong>EUR</strong><br>
+<strong>5.00</strong><br>
+<br>
+TS-2025-045<br>
+Invoice TS-2025-045
+        </div>
+        <div class="qr-display">
+            <canvas id="qr2"></canvas>
+            <p><strong>Scan this QR code with Revolut and check if it shows 5.00 €</strong></p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="description">Test 3: Amount without decimal (5)</div>
+        <div class="structure">
+BCD<br>
+002<br>
+1<br>
+SCT<br>
+LJBASI2X<br>
+Test Company d.o.o.<br>
+SI56020313671566113<br>
+<strong>5</strong><br>
+<strong>EUR</strong><br>
+<br>
+TS-2025-045<br>
+Invoice TS-2025-045
+        </div>
+        <div class="qr-display">
+            <canvas id="qr3"></canvas>
+            <p><strong>Scan this QR code with Revolut and check if it shows 5.00 €</strong></p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <div class="description">Test 4: No BIC (domestic transfer)</div>
+        <div class="structure">
+BCD<br>
+002<br>
+1<br>
+SCT<br>
+<br>
+Test Company d.o.o.<br>
+SI56020313671566113<br>
+<strong>5.00</strong><br>
+<strong>EUR</strong><br>
+<br>
+TS-2025-045<br>
+Invoice TS-2025-045
+        </div>
+        <div class="qr-display">
+            <canvas id="qr4"></canvas>
+            <p><strong>Scan this QR code with Revolut and check if it shows 5.00 €</strong></p>
+        </div>
+    </div>
+
+    <script>
+        // Test 1: Standard EPC (Amount before Currency)
+        const test1 = `BCD
+002
+1
+SCT
+LJBASI2X
+Test Company d.o.o.
+SI56020313671566113
+5.00
+EUR
+
+TS-2025-045
+Invoice TS-2025-045`;
+
+        // Test 2: Currency before Amount
+        const test2 = `BCD
+002
+1
+SCT
+LJBASI2X
+Test Company d.o.o.
+SI56020313671566113
+EUR
+5.00
+
+TS-2025-045
+Invoice TS-2025-045`;
+
+        // Test 3: Amount without decimal
+        const test3 = `BCD
+002
+1
+SCT
+LJBASI2X
+Test Company d.o.o.
+SI56020313671566113
+5
+EUR
+
+TS-2025-045
+Invoice TS-2025-045`;
+
+        // Test 4: No BIC
+        const test4 = `BCD
+002
+1
+SCT
+
+Test Company d.o.o.
+SI56020313671566113
+5.00
+EUR
+
+TS-2025-045
+Invoice TS-2025-045`;
+
+        // Generate QR codes using client-side library
+        function generateQRCode(text, canvasId) {
+            const canvas = document.getElementById(canvasId);
+            QRCode.toCanvas(canvas, text, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error) {
+                if (error) {
+                    canvas.parentNode.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                }
+            });
+        }
+
+        // Generate all QR codes when page loads
+        window.onload = function() {
+            generateQRCode(test1, 'qr1');
+            generateQRCode(test2, 'qr2');
+            generateQRCode(test3, 'qr3');
+            generateQRCode(test4, 'qr4');
+        };
+    </script>
+</body>
+</html>
